@@ -12,6 +12,8 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
+# 随附的跨院区重号样例，便于在容器内查看/测试
+COPY samples ./samples
 
 # 以非 root 用户运行
 RUN useradd --create-home --uid 10001 appuser \

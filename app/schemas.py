@@ -187,3 +187,52 @@ class ConflictResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: Literal["ok"]
     service: str
+
+
+# ---------------------------------------------------------------------------
+# 归并接口的退回响应
+# ---------------------------------------------------------------------------
+
+class MergeSourceLocation(BaseModel):
+    file: str = Field(..., description="上传时的原始文件名")
+    upload_index: int = Field(..., description="本批次中的文件序号，从 1 开始")
+    line: int = Field(..., description="原始物理行号，表头为第 1 行")
+    case_id: str | None = None
+    township: str | None = None
+    age_group: str | None = None
+
+
+class MergeErrorItem(BaseModel):
+    type: str = Field(
+        ...,
+        description=(
+            "format_error / out_of_order / duplicate_conflict / "
+            "too_many_files / empty_batch"
+        ),
+    )
+    message: str
+    file: str | None = Field(default=None, description="出错来源文件")
+    line: int | None = Field(default=None, description="出错记录起始物理行号")
+    sources: list[MergeSourceLocation] | None = Field(
+        default=None, description="同号冲突或逆序涉及的两处来源"
+    )
+
+
+class MergeRejectedResponse(BaseModel):
+    status: Literal["rejected"]
+    error_type: str
+    message: str
+    detail: str
+    error: MergeErrorItem
+    errors: list[MergeErrorItem]
+    # 便于客户端直接读取的顶层定位字段（与 error 内字段一致）
+    file: str | None = None
+    filename: str | None = None
+    source_file: str | None = None
+    line: int | None = None
+    line_number: int | None = None
+    sources: list[MergeSourceLocation] | None = None
+    max_files: int | None = None
+    uploaded_files: list[str] | None = None
+    encoding_error: str | None = None
+
